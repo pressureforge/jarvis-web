@@ -192,7 +192,9 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
             fitView
+            fitViewOptions={{ padding: 0.2 }}
             attributionPosition="bottom-left"
+            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           >
             <Background color="#333" gap={20} />
             <Controls />
