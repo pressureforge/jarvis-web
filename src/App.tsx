@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { TabType, ViewType } from '../types';
 import Chat from './components/Chat';
 import Dashboard from './components/Dashboard';
 
-
 function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('chat');
-  const [viewType, setViewType] = useState<ViewType>('list');
+  const [activeTab, setActiveTab] = useState<'chat' | 'dashboard'>('chat');
 
   return (
     <div className="app">
@@ -25,20 +22,15 @@ function App() {
         </button>
         <button
           className={`tab ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('dashboard');
-            setViewType('list');
-          }}
+          onClick={() => setActiveTab('dashboard')}
         >
-          📋 Dashboard
+          🔗 Graph
         </button>
       </div>
 
       <main className="main">
         {activeTab === 'chat' && <Chat />}
-        {activeTab === 'dashboard' && (
-          <Dashboard viewType={viewType} setViewType={setViewType} />
-        )}
+        {activeTab === 'dashboard' && <Dashboard />}
       </main>
     </div>
   );
