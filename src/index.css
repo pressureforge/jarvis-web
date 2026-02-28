@@ -408,3 +408,72 @@ body {
   font-size: 0.8rem;
   color: #666;
 }
+
+/* Simple Graph */
+.simple-graph {
+  padding: 1rem;
+}
+
+.graph-row {
+  margin-bottom: 1.5rem;
+  padding-left: 1rem;
+}
+
+.graph-type {
+  font-size: 0.85rem;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.graph-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.graph-item {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.graph-item:hover {
+  transform: scale(1.05);
+}
+
+.relations-view {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.relation-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.rel-label {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.entity {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.entity:hover {
+  transform: translateX(4px);
+}
