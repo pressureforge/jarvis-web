@@ -40,15 +40,14 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
       setEntities(data.entities || []);
       setRelations(data.relations || []);
       
-      // Build graph
       const typeOrder = ['Person', 'Project', 'Task', 'Event', 'Document'];
       const typePositions: Record<string, number> = {};
       
-      const newNodes: Node[] = (data.entities || []).map((entity, idx) => {
+      const newNodes: Node[] = (data.entities || []).map((entity) => {
         const type = entity.type;
         if (!typePositions[type]) typePositions[type] = 0;
         
-        const label = entity.properties.name || entity.properties.title || entity.id;
+        const name = String(entity.properties.name || entity.properties.title || entity.id);
         const color = nodeColors[type] || '#888888';
         const typeIdx = typeOrder.indexOf(type);
         const x = typeIdx * 300 + (typePositions[type] % 3) * 180;
@@ -59,7 +58,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
         return {
           id: entity.id,
           position: { x, y },
-          data: { label: label.length > 25 ? label.substring(0, 22) + '...' : label },
+          data: { label: name.length > 25 ? name.substring(0, 22) + '...' : name },
           style: {
             background: color,
             border: `2px solid ${color}88`,
@@ -96,6 +95,12 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
     loadData();
   }, [loadData]);
 
+  const groupedEntities = entities.reduce<Record<string, Entity[]>>((acc, e) => {
+    if (!acc[e.type]) acc[e.type] = [];
+    acc[e.type].push(e);
+    return acc;
+  }, {});
+
   return (
     <div className="dashboard">
       <div className="view-toggle">
@@ -120,13 +125,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
           ) : entities.length === 0 ? (
             <div className="empty-state">No entities yet.</div>
           ) : (
-            Object.entries(
-              entities.reduce<Record<string, Entity[]>>((acc, e) => {
-                if (!acc[e.type]) acc[e.type] = [];
-                acc[e.type].push(e);
-                return acc;
-              }, {})
-            ).map(([type, ents]) => (
+            Object.entries(groupedEntities).map(([type, ents]) => (
               <div key={type} className="section">
                 <div className="section-title">{type}s</div>
                 {ents.map(entity => (
@@ -136,7 +135,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
                       <span className="entity-id">{entity.id}</span>
                     </div>
                     <div className="entity-name">
-                      {entity.properties.name || entity.properties.title || 'Unnamed'}
+                      {String(entity.properties.name || entity.properties.title || 'Unnamed')}
                     </div>
                     <div className="entity-props">
                       {Object.entries(entity.properties).map(([key, value]) => (
@@ -178,7 +177,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
           >
             <Background color="#333" gap={20} />
             <Controls />
-            <MiniMap nodeColor={n => nodeColors[n.type || 'default'] || '#888'} />
+            <MiniMap nodeColor={(n) => nodeColors[n.type || 'default'] || '#888'} />
           </ReactFlow>
         </div>
       )}

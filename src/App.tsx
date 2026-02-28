@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { TabType, ViewType } from '../types';
 import Chat from './components/Chat';
 import Dashboard from './components/Dashboard';
-import './App.css';
+
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('chat');

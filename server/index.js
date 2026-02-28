@@ -28,8 +28,8 @@ function getOntologyData() {
   try {
     const content = fs.readFileSync(ONTOLOGY_FILE, 'utf8');
     const lines = content.trim().split('\n').filter(l => l);
-    const entities: unknown[] = [];
-    const relations: unknown[] = [];
+    const entities = [];
+    const relations = [];
     
     lines.forEach(line => {
       try {
@@ -45,7 +45,7 @@ function getOntologyData() {
   }
 }
 
-const mimeTypes: Record<string, string> = {
+const mimeTypes = {
   '.html': 'text/html',
   '.js': 'application/javascript',
   '.css': 'text/css',
@@ -56,7 +56,7 @@ const mimeTypes: Record<string, string> = {
 };
 
 const server = http.createServer((req, res) => {
-  const urlPath = req.url?.split('?')[0] || '/';
+  const urlPath = (req.url?.split('?')[0]) || '/';
   
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -85,12 +85,9 @@ const server = http.createServer((req, res) => {
   }
 
   if (urlPath === '/api/responses' && req.method === 'GET') {
-    const lastTimestamp = parseInt(req.headers['last-timestamp'] as string || '0');
+    const lastTimestamp = parseInt(req.headers['last-timestamp'] || '0');
     const messages = JSON.parse(fs.readFileSync(MESSAGES_FILE, 'utf8'));
-    const newMessages = messages.filter((m: unknown) => {
-      const msg = m as { timestamp: number; sender: string };
-      return msg.timestamp > lastTimestamp && msg.sender !== 'assistant';
-    });
+    const newMessages = messages.filter(m => m.timestamp > lastTimestamp && m.sender !== 'assistant');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ messages: newMessages, serverTime: Date.now() }));
     return;

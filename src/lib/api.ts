@@ -1,6 +1,6 @@
 import { OntologyData, ChatMessage } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = 'https://api.jarvis-tool.xyz';
 
 export async function getOntology(): Promise<OntologyData> {
   const res = await fetch(`${API_BASE}/ontology`);
@@ -15,7 +15,7 @@ export async function getMessages(): Promise<{ messages: ChatMessage[]; serverTi
 }
 
 export async function sendMessage(message: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/chat`, {
+  const res = await fetch(`${API_BASE}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sender: 'guest', message }),
@@ -24,7 +24,7 @@ export async function sendMessage(message: string): Promise<void> {
 }
 
 export async function pollResponses(lastTimestamp: number): Promise<{ messages: ChatMessage[]; serverTime: number }> {
-  const res = await fetch(`${API_BASE}/responses?last=${lastTimestamp}`);
+  const res = await fetch(`${API_BASE}/messages/poll?last=${lastTimestamp}`);
   if (!res.ok) throw new Error('Failed to poll responses');
   return res.json();
 }
