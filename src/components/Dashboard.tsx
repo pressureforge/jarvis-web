@@ -6,7 +6,8 @@ import ReactFlow, {
   Controls, 
   MiniMap,
   useNodesState,
-  useEdgesState
+  useEdgesState,
+  MarkerType
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { getOntology } from '../lib/api';
@@ -29,6 +30,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [relations, setRelations] = useState<Relation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -40,6 +42,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
       setEntities(data.entities || []);
       setRelations(data.relations || []);
       
+      // Convert entities to React Flow nodes
       const typeOrder = ['Person', 'Project', 'Task', 'Event', 'Document'];
       const typePositions: Record<string, number> = {};
       
@@ -50,27 +53,34 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
         const name = String(entity.properties.name || entity.properties.title || entity.id);
         const color = nodeColors[type] || '#888888';
         const typeIdx = typeOrder.indexOf(type);
-        const x = typeIdx * 300 + (typePositions[type] % 3) * 180;
-        const y = Math.floor(typePositions[type] / 3) * 150;
+        const x = typeIdx * 300 + (typePositions[type] % 3) * 200;
+        const y = Math.floor(typePositions[type] / 3) * 180;
         
         typePositions[type]++;
         
         return {
           id: entity.id,
           position: { x, y },
-          data: { label: name.length > 25 ? name.substring(0, 22) + '...' : name },
+          data: { 
+            label: name.length > 25 ? name.substring(0, 22) + '...' : name,
+            entity: entity
+          },
           style: {
             background: color,
             border: `2px solid ${color}88`,
             borderRadius: '8px',
-            padding: '10px 15px',
+            padding: '12px 18px',
             color: '#000',
             fontWeight: 600,
-            fontSize: '12px',
+            fontSize: '13px',
+            minWidth: '150px',
+            textAlign: 'center',
+            cursor: 'pointer',
           },
         };
       });
       
+      // Convert relations to React Flow edges
       const newEdges: Edge[] = (data.relations || []).map((rel, i) => ({
         id: `${rel.from}-${rel.rel}-${rel.to}-${i}`,
         source: rel.from,
@@ -78,9 +88,13 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
         label: rel.rel,
         type: 'smoothstep',
         animated: true,
-        style: { stroke: '#666' },
+        style: { stroke: '#666', strokeWidth: 2 },
         labelStyle: { fill: '#aaa', fontSize: 10 },
-        labelBgStyle: { fill: '#1a1a2e', fillOpacity: 0.8 },
+        labelBgStyle: { fill: '#1a1a2e', fillOpacity: 0.9 },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: '#666',
+        },
       }));
       
       setNodes(newNodes);
@@ -94,6 +108,10 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const onNodeClick = (_: unknown, node: { data: { entity: Entity } }) => {
+    setSelectedNode(node.data.entity);
+  };
 
   const groupedEntities = entities.reduce<Record<string, Entity[]>>((acc, e) => {
     if (!acc[e.type]) acc[e.type] = [];
@@ -129,7 +147,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
               <div key={type} className="section">
                 <div className="section-title">{type}s</div>
                 {ents.map(entity => (
-                  <div key={entity.id} className="entity">
+                  <div key={entity.id} className="entity" onClick={() => setSelectedNode(entity)}>
                     <div className="entity-header">
                       <span className="entity-type">{entity.type}</span>
                       <span className="entity-id">{entity.id}</span>
@@ -172,6 +190,7 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
+            onNodeClick={onNodeClick}
             fitView
             attributionPosition="bottom-left"
           >
@@ -179,6 +198,36 @@ export default function Dashboard({ viewType, setViewType }: DashboardProps) {
             <Controls />
             <MiniMap nodeColor={(n) => nodeColors[n.type || 'default'] || '#888'} />
           </ReactFlow>
+        </div>
+      )}
+
+      {/* Node Detail Modal */}
+      {selectedNode && (
+        <div className="modal-overlay" onClick={() => setSelectedNode(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="entity-type">{selectedNode.type}</span>
+              <button className="modal-close" onClick={() => setSelectedNode(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <h3>{String(selectedNode.properties.name || selectedNode.properties.title || selectedNode.id)}</h3>
+              <div className="modal-props">
+                {Object.entries(selectedNode.properties).map(([key, value]) => (
+                  <div key={key} className="prop-row">
+                    <span className="prop-key">{key}:</span>
+                    <span className="prop-value">
+                      {Array.isArray(value) ? value.join(', ') : String(value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="modal-meta">
+                <div>ID: {selectedNode.id}</div>
+                <div>Created: {new Date(selectedNode.created).toLocaleString()}</div>
+                <div>Updated: {new Date(selectedNode.updated).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
