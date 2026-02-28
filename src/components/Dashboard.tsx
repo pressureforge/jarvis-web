@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
   MarkerType,
@@ -112,37 +111,31 @@ function GraphView({ entities, relations }: {
   }, [layouted, setNodes, setEdges]);
 
   return (
-    <div style={{ width: '100%', height: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0, 240, 255, 0.3)', background: '#0a0a0f' }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.1}
-        maxZoom={2}
-        defaultEdgeOptions={{
-          type: 'smoothstep',
-          animated: true,
-        }}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background color="#00f0ff" gap={20} size={0.5} />
-        <Controls 
-          style={{ background: '#12121a', borderRadius: '8px', border: '1px solid rgba(0, 240, 255, 0.3)' }}
-        />
-        <MiniMap 
-          nodeColor={(n) => nodeColors[n.type || 'default'] || '#888'}
-          maskColor="rgba(10, 10, 15, 0.8)"
-          style={{ background: '#12121a', borderRadius: '8px', border: '1px solid rgba(0, 240, 255, 0.2)' }}
-        />
-      </ReactFlow>
-    </div>
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      fitView
+      fitViewOptions={{ padding: 0.1 }}
+      minZoom={0.05}
+      maxZoom={2}
+      proOptions={{ hideAttribution: true }}
+      style={{ background: '#0a0a0f' }}
+    >
+      <Background color="#00f0ff" gap={20} size={0.5} />
+      <Controls 
+        style={{ background: '#12121a', borderRadius: '8px', border: '1px solid rgba(0, 240, 255, 0.3)' }}
+      />
+    </ReactFlow>
   );
 }
 
-export default function Dashboard() {
+interface DashboardProps {
+  onClose: () => void;
+}
+
+export default function Dashboard({ onClose }: DashboardProps) {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [relations, setRelations] = useState<Relation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,23 +156,25 @@ export default function Dashboard() {
     loadData();
   }, [loadData]);
 
-  if (loading) {
-    return (
-      <div className="dashboard">
-        <div className="empty-state">Loading ontology...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="dashboard">
-      {entities.length === 0 ? (
-        <div className="empty-state">No entities in ontology</div>
-      ) : (
-        <ReactFlowProvider>
-          <GraphView entities={entities} relations={relations} />
-        </ReactFlowProvider>
-      )}
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}>
+      <div className="top-bar">
+        <button className="nav-btn" onClick={onClose}>
+          💬 Chat
+        </button>
+      </div>
+      
+      <div style={{ width: '100%', height: '100%', paddingTop: '60px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>Loading...</div>
+        ) : entities.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No entities</div>
+        ) : (
+          <ReactFlowProvider>
+            <GraphView entities={entities} relations={relations} />
+          </ReactFlowProvider>
+        )}
+      </div>
     </div>
   );
 }
