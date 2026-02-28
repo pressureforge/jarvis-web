@@ -8,6 +8,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const lastTimestamp = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     loadMessages();
@@ -19,11 +20,18 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 150) + 'px';
+    }
+  }, [input]);
+
   async function loadMessages() {
     try {
       const data = await getMessages();
-      const recent = data.messages.slice(-10);
-      setMessages(recent.filter(m => m.sender === 'assistant'));
+      setMessages(data.messages.slice(-20));
       lastTimestamp.current = data.serverTime;
     } catch (e) {
       console.error('Load error:', e);
@@ -34,8 +42,7 @@ export default function Chat() {
     try {
       const data = await pollResponses(lastTimestamp.current);
       if (data.messages.length > 0) {
-        const newMessages = data.messages.filter(m => m.sender === 'assistant');
-        setMessages(prev => [...prev, ...newMessages]);
+        setMessages(prev => [...prev, ...data.messages]);
       }
       lastTimestamp.current = data.serverTime;
     } catch (e) {
@@ -59,6 +66,9 @@ export default function Chat() {
     }
 
     setSending(false);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
   }
 
   return (
@@ -66,26 +76,31 @@ export default function Chat() {
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="message assistant">
-            <div className="sender">Jarvis</div>
             Hey! What's on your mind?
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={i} className={`message ${msg.sender === 'You' ? 'user' : 'assistant'}`}>
-            <div className="sender">{msg.sender}</div>
+          <div key={i} className={`message ${msg.sender === 'You' || msg.sender === 'guest' ? 'user' : 'assistant'}`}>
             {msg.message}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
       <div className="chat-input">
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
+          className="chat-textarea"
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
           placeholder="Type a message..."
           disabled={sending}
+          rows={1}
         />
         <button onClick={handleSend} disabled={sending || !input.trim()}>
           Send
