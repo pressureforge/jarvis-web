@@ -42,7 +42,12 @@ export default function Chat() {
     try {
       const data = await pollResponses(lastTimestamp.current);
       if (data.messages.length > 0) {
-        setMessages(prev => [...prev, ...data.messages]);
+        // Add only new messages (dedupe)
+        setMessages(prev => {
+          const existing = new Set(prev.map(m => m.timestamp + m.message));
+          const newOnly = data.messages.filter(m => !existing.has(m.timestamp + m.message));
+          return [...prev, ...newOnly];
+        });
       }
       lastTimestamp.current = data.serverTime;
     } catch (e) {
